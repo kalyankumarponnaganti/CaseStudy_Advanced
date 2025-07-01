@@ -1,62 +1,84 @@
 package stepDefinitions;
 
 import io.cucumber.java.en.*;
-
-import static Reports.seleniumTest.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import utility.browserDriver;
+import java.time.Duration;
+import static Reports.reportManager.*;
 import static org.junit.Assert.assertEquals;
-import static pages.cartPage.*;
-import static pages.checkOutCompletePage.*;
-import static pages.checkOutInfoPage.*;
-import static pages.checkOutOverviewPage.*;
 import static pages.loginCredentialsPage.*;
-import static pages.productsPage.*;
 
 public class sauceDemoSteps {
 
-    @Given("User successfully enters the login credentials username {string} and password {string}")
-    public void user_provides_login_details_sauce_demo_site(String username, String password) throws Exception {
+    @Given("User successfully enters the login credentials username {string} and password {string} and testcase {string}")
+    public void user_provides_login_details_sauce_demo_site(String username, String password, String testcase) throws Exception {
 
-                extent_reports("first.jpg","Initial Login Page");
+        String testDesc = "Login and place an order using user: " + username;
+        createTest(testcase, testDesc); // reportManager now handles Screenshots/TestX
+                getTest().info("Entering username and password");
                 sendkeys_username(username);
                 sendkeys_password(password);
+                attachScreenshot("Login Page");
                 Thread.sleep(3000);
-                extent_reports("login.jpg","User Credentials");
                 click_login_btn();
-                Thread.sleep(3000);
+        getTest().info("Login submitted");
+        Thread.sleep(3000);
+        try {
+            WebDriverWait wait = new WebDriverWait(browserDriver.getDriver(), Duration.ofSeconds(5));
+
+            WebElement changePasswordPopup = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("change-password-popup")));
+            WebElement skipButton = changePasswordPopup.findElement(By.xpath("//button[text()='Skip']"));
+            skipButton.click();
+
+            getTest().info("Change password popup handled");
+            System.out.println("Change password popup handled.");
+        } catch (TimeoutException e) {
+
+            System.out.println("No change password popup detected.");
+            getTest().info("No change password popup detected");
+        }
+        getTest().info("Login button clicked");
+        attachScreenshot("Success Login Page");
+        Thread.sleep(3000);
     }
 
     @When("User adds items to cart and checkout")
     public void user_adds_items() throws Exception {
-        extent_reports("products.jpg", "Products Page");
+        getTest().info("Adding products to cart");
         click_add_items_btn();
-        extent_reports("additems.jpg", "Added Items");
+        attachScreenshot("Items Added");
         Thread.sleep(3000);
         click_cart_btn();
-        extent_reports("cartbt.jpg","Cart Filled");
+        attachScreenshot("Cart View");
         Thread.sleep(3000);
         click_checkout_btn();
+        getTest().info("Checkout button clicked");
         Thread.sleep(3000);
     }
 
-//    @And("User proceeds to fills information and continue")
     @And("User proceeds to fills information firstname {string} and lastname {string} and postalcode {string} and continue")
     public void user_checks_fill_info(String firstname, String lastname, String postalcode) throws Exception {
-        extent_reports("fillinfo.jpg", "User Info to get products");
         sendkeys_firstName(firstname);
         sendkeys_lastName(lastname);
         sendkeys_postalCode(postalcode);
-        extent_reports("details.jpg", "User Information to deliver");
+        attachScreenshot("User Info Filled");
         click_continue_btn();
+        getTest().info("Continue button clicked");
         Thread.sleep(3000);
-        extent_reports("finish.jpg", "Finish Action");
         click_finish_btn();
+        attachScreenshot("Order Finished");
         Thread.sleep(3000);
     }
 
     @Then("User should see order confirmation message \"THANK YOU FOR YOUR ORDER\"")
         public void order_confirmation_validation() throws Exception {
-        extent_reports("ordervalid.jpg", "Order Confirmation");
+        attachScreenshot("Order Confirmation");
         String actualFinishMsg = visibility_finish_msg();
             assertEquals(actualFinishMsg, "Thank you for your order!");
+        getTest().pass("Order confirmed successfully");
         }
 }

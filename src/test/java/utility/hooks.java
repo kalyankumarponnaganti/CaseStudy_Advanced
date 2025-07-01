@@ -1,35 +1,44 @@
 package utility;
 
+import Reports.reportManager;
 import io.cucumber.java.After;
+import io.cucumber.java.AfterAll;
 import io.cucumber.java.Before;
-import org.openqa.selenium.chrome.ChromeOptions;
+import io.cucumber.java.BeforeAll;
 
 import java.awt.*;
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class hooks {
 
-    public static browserDriver driver;
 
-    public static ChromeOptions options;
+    @BeforeAll
+    public static void beforeAllTests() {
+        reportManager.initReports(); // only once
+    }
 
     @Before
-    public static void setUP() throws InterruptedException, Exception{
-        driver = new browserDriver();
-
+    public void setUP(io.cucumber.java.Scenario scenario) throws InterruptedException, Exception{
+        browserDriver.setDriver();
     }
 
     @After
-    public void tearDown() throws Exception{
-//        LocalDateTime now = LocalDateTime.now();
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-//        String formattedNow = now.format(formatter);
-//        String fname = "report"+formattedNow+".html";
-        Desktop.getDesktop().browse(new File("report.html").toURI());
-//        Desktop.getDesktop().browse(new File(fname).toURI());
-        driver.close();
+    public void tearDown(io.cucumber.java.Scenario scenario) throws Exception{
+
+        if (scenario.isFailed()) {
+            reportManager.getTest().fail("Scenario Failed: " + scenario.getName());
+        } else {
+            reportManager.getTest().pass("Scenario Passed: " + scenario.getName());
+        }
+        reportManager.unload();
+        browserDriver.quitDriver();
     }
+
+    @AfterAll
+    public static void afterAllTests() throws Exception {
+        reportManager.flushReports();
+        Desktop.getDesktop().browse(new File("report.html").toURI());
+    }
+
 
 }
