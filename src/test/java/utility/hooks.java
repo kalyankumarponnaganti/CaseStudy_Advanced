@@ -37,7 +37,7 @@ public class hooks {
     @AfterAll
     public static void afterAllTests() throws Exception {
         reportManager.flushReports();
-        Desktop.getDesktop().browse(new File("report.html").toURI());
+        //Desktop.getDesktop().browse(new File("report.html").toURI());
     }
 
 
